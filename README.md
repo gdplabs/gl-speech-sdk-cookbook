@@ -1,6 +1,6 @@
 # GL Speech Examples
 
-Example scripts for the **GL Speech** ([gl-speech on PyPI](https://pypi.org/project/gl-speech/)). Each example uses `from gl_speech import SpeechClient` and demonstrates one or more API endpoints for **Speech-to-Text (STT)**, **Text-to-Speech (TTS)**, and **Webhooks**.
+Example scripts for the **GL Speech** ([gl-speech on PyPI](https://pypi.org/project/gl-speech/)). Each example uses `from gl_speech import SpeechClient` and demonstrates one or more API endpoints for **Speech-to-Text (STT)**, **Text-to-Speech (TTS)**, **Webhooks**, and **LiveKit real-time voice agents**.
 
 ## Prerequisites
 
@@ -8,6 +8,12 @@ Example scripts for the **GL Speech** ([gl-speech on PyPI](https://pypi.org/proj
 
    ```bash
    pip install gl-speech
+   ```
+
+   For LiveKit integration (examples 23–25):
+
+   ```bash
+   pip install "gl-speech[livekit]" livekit-agents livekit-plugins-openai
    ```
 
 2. **Environment variables**
@@ -62,12 +68,29 @@ Example scripts for the **GL Speech** ([gl-speech on PyPI](https://pypi.org/proj
 | `21_webhooks_test_endpoint.py`   | `webhooks.test_endpoint()`   | Trigger test delivery           |
 | `22_webhooks_list_deliveries.py` | `webhooks.list_deliveries()` | List deliveries for an endpoint |
 
+### LiveKit (Real-time Voice Agents)
+
+| File                  | Plugin                  | Description                                       |
+| --------------------- | ----------------------- | ------------------------------------------------- |
+| `23_livekit_stt.py`   | `gl_speech.livekit.STT` | Configure GL Speech STT plugin for LiveKit agents |
+| `24_livekit_tts.py`   | `gl_speech.livekit.TTS` | Configure GL Speech TTS plugin for LiveKit agents |
+| `25_livekit_agent.py` | Full pipeline           | Complete VoicePipelineAgent with STT + LLM + TTS  |
+
 ## Optional environment variables
 
 - **`GLSPEECH_WEBHOOK_URL`** – Used by examples 14, 16 for callback URL.
 - **`GLSPEECH_WEBHOOK_ENDPOINT_ID`** – Used by webhook examples 15–18, 21, 22.
 - **`GLSPEECH_WEBHOOK_SIDE`** – For webhook examples 13–22: `stt` or `tts`. Chooses which client’s webhooks to use (STT job webhooks vs TTS job webhooks). Default: `tts`.
 - **`GLSPEECH_WEBHOOK_EVENT_ID`** – Used by example 20.
+- **`GLSPEECH_STT_WSS_URL`** – WebSocket URL for LiveKit STT plugin (examples 23, 25).
+- **`GLSPEECH_TTS_WSS_URL`** – WebSocket URL for LiveKit TTS plugin (examples 24, 25).
+- **`GLSPEECH_STT_MODEL`** – STT model for LiveKit (default: `stt-general-online`).
+- **`GLSPEECH_STT_LANGUAGE`** – STT language for LiveKit (default: `id-ID`).
+- **`GLSPEECH_TTS_MODEL`** – TTS model for LiveKit (default: `tts-dimas-formal`).
+- **`LIVEKIT_URL`** – LiveKit server URL (example 25).
+- **`LIVEKIT_API_KEY`** – LiveKit API key (example 25).
+- **`LIVEKIT_API_SECRET`** – LiveKit API secret (example 25).
+- **`OPENAI_API_KEY`** – OpenAI API key for LLM in voice pipeline (example 25).
 
 ## Running an example
 
@@ -80,6 +103,7 @@ export GLSPEECH_TTS_BASE_URL="https://api.prosa.ai/v2/speech/"
 python examples/01_stt_list_models.py
 python examples/07_tts_synthesize.py
 python examples/13_webhooks_list_endpoints.py
+python examples/23_livekit_stt.py
 ```
 
 ## Quick reference
@@ -132,4 +156,30 @@ tts_client.webhooks.list_events()
 tts_client.webhooks.get_event(event_id)
 tts_client.webhooks.test_endpoint(endpoint_id)
 tts_client.webhooks.list_deliveries(endpoint_id)
+```
+
+### LiveKit (real-time voice agents)
+
+```python
+from gl_speech.livekit import STT, TTS
+
+# STT plugin
+stt = STT(
+    api_key="your-stt-api-key",
+    wss_url="wss://your-stt-websocket-url",
+    model="stt-general-online",
+    language="id-ID",
+)
+
+# TTS plugin
+tts = TTS(
+    api_key="your-tts-api-key",
+    wss_url="wss://your-tts-websocket-url",
+    model="tts-dimas-formal",
+)
+
+# Use with a LiveKit VoicePipelineAgent
+from livekit.agents.pipeline import VoicePipelineAgent
+
+agent = VoicePipelineAgent(stt=stt, llm=your_llm, tts=tts)
 ```
